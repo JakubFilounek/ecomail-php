@@ -1,7 +1,7 @@
 <?php
 
 /**
- * PHP knihovna pro přístup k API
+ * PHP library for accessing the Ecomail API
  *
  * @author Filip Šedivý <mail@filipsedivy.cz>
  * @version 1.1
@@ -13,26 +13,26 @@ class Ecomail
     const PlainText = 'plaintext';
 
 
-    /** @var string $key Klíč API */
+    /** @var string $key API key */
     private $key;
 
-    /** @var string $server Server API */
+    /** @var string $server API server */
     private $server;
 
-    /** @var string $response Návratový typ */
+    /** @var string $response Response type */
     private $response;
 
-    /** @var array $query Query parametry pro všechna API volání */
+    /** @var array $query Query parameters for all API calls */
     private $query;
 
 
     /**
-     * Konstruktor
+     * Constructor
      *
-     * @param string $key Klíč API
-     * @param string $response Návratový typ
-     * @param string $server Server API
-     * @param array $query Query parametry pro všechna API volání
+     * @param string $key API key
+     * @param string $response Response type
+     * @param string $server API server
+     * @param array $query Query parameters for all API calls
      */
     public function __construct(
         $key,
@@ -50,10 +50,10 @@ class Ecomail
     // === Modifiers ===
 
     /**
-     * Vytvoří novou instanci služby pro volání API se zadaným query parametrem.
+     * Creates a new service instance for API calls with the specified query parameter.
      *
-     * @param string $key Název query parametru
-     * @param string|int|null $value Hodnota quoery parametru, pro smazání parametru zadejte `null`
+     * @param string $key Query parameter name
+     * @param string|int|null $value Query parameter value, use `null` to remove parameter
      * @return $this
      */
     public function withQuery($key, $value)
@@ -70,9 +70,9 @@ class Ecomail
 
 
     /**
-     * Vytvoří novou instanci služby pro čtení příslušné stránky z API
+     * Creates a new service instance for reading the appropriate page from API
      *
-     * @param int $page Číslo stránky
+     * @param int $page Page number
      * @return $this
      */
     public function page($page)
@@ -84,7 +84,7 @@ class Ecomail
     // === Lists ===
 
     /**
-     * Práce se seznamy kontaktů a s přihlášenými odběrateli
+     * Working with contact lists and subscribed subscribers
      * @return array|stdClass|string
      */
     public function getListsCollection()
@@ -94,7 +94,7 @@ class Ecomail
 
 
     /**
-     * Vložení nového seznamu kontaktů
+     * Adding a new contact list
      * @param array $data Data
      * @return array|stdClass|string
      */
@@ -105,7 +105,7 @@ class Ecomail
 
 
     /**
-     * @param string $list_id ID listu
+     * @param string $list_id List ID
      * @return array|stdClass|string
      */
     public function showList($list_id)
@@ -116,7 +116,7 @@ class Ecomail
 
 
     /**
-     * @param string $list_id ID listu
+     * @param string $list_id List ID
      * @param array $data Data
      * @return array|stdClass|string
      */
@@ -128,7 +128,7 @@ class Ecomail
 
 
     /**
-     * @param string $list_id ID listu
+     * @param string $list_id List ID
      * @return array|stdClass|string
      */
     public function getSubscribers($list_id)
@@ -139,13 +139,38 @@ class Ecomail
 
 
     /**
-     * @param string $list_id ID listu
+     * @param string $list_id List ID
      * @param string $email Email
      * @return array|stdClass|string
      */
     public function getSubscriber($list_id, $email)
     {
         $url = $this->joinString('lists/', $list_id, '/subscriber/', $email);
+        return $this->get($url);
+    }
+
+
+    /**
+     * Get subscriber by phone number
+     * @param string $list_id ID of the list
+     * @param string $phone Phone number (must be valid international format)
+     * @return array|stdClass|string
+     */
+    public function getSubscriberByPhone($list_id, $phone)
+    {
+        $url = $this->joinString('lists/', $list_id, '/subscriber-by-phone/', $phone);
+        return $this->get($url);
+    }
+
+
+    /**
+     * Get segments for a specific list
+     * @param string $list_id ID of the list
+     * @return array|stdClass|string
+     */
+    public function getListSegments($list_id)
+    {
+        $url = $this->joinString('lists/', $list_id, '/segments');
         return $this->get($url);
     }
 
@@ -162,7 +187,7 @@ class Ecomail
 
 
     /**
-     * @param string $list_id ID listu
+     * @param string $list_id List ID
      * @param array $data Data
      * @return array|stdClass|string
      */
@@ -174,7 +199,7 @@ class Ecomail
 
 
     /**
-     * @param string $list_id ID listu
+     * @param string $list_id List ID
      * @param array $data
      * @return array|stdClass|string
      */
@@ -186,7 +211,7 @@ class Ecomail
 
 
     /**
-     * @param string $list_id ID listu
+     * @param string $list_id List ID
      * @param array $data Data
      * @return array|stdClass|string
      */
@@ -198,7 +223,7 @@ class Ecomail
 
 
     /**
-     * @param string $list_id ID listu
+     * @param string $list_id List ID
      * @param array $data Data
      * @return array|stdClass|string
      */
@@ -239,7 +264,7 @@ class Ecomail
     // === Campaigns ===
 
     /**
-     * @param string|null $filters Filtr
+     * @param string|null $filters Filter
      * @return array|stdClass|string
      */
     public function listCampaigns($filters = null)
@@ -267,7 +292,7 @@ class Ecomail
 
 
     /**
-     * @param int $campaign_id ID kampaně
+     * @param int $campaign_id Campaign ID
      * @param array $data Data
      * @return array|stdClass|string
      */
@@ -279,10 +304,10 @@ class Ecomail
 
 
     /**
-     * Toto volání okamžitě zařadí danou kampaň do fronty k odeslání.
-     * Tuto akci již nelze vrátit zpět.
+     * This call immediately queues the given campaign for sending.
+     * This action cannot be undone.
      *
-     * @param int $campaign_id ID kampaně
+     * @param int $campaign_id Campaign ID
      * @return array|stdClass|string
      */
     public function sendCampaign($campaign_id)
@@ -293,9 +318,9 @@ class Ecomail
 
 
     /**
-     * Získejte statistiku odeslané kampaně.
+     * Get statistics for sent campaign.
      *
-     * @param int $campaign_id ID kampaně
+     * @param int $campaign_id Campaign ID
      * @return array|stdClass|string
      */
     public function getCampaignStats($campaign_id)
@@ -327,6 +352,18 @@ class Ecomail
     }
 
 
+    /**
+     * Get segment statistics across all campaigns
+     * @param string $segmentId ID of the segment
+     * @return array|stdClass|string
+     */
+    public function getSegmentStats($segmentId)
+    {
+        $url = $this->joinString('campaigns/segment/', $segmentId, '/stats');
+        return $this->get($url);
+    }
+
+
     // === Automation ===
 
     /**
@@ -340,7 +377,7 @@ class Ecomail
 
 
     /**
-     * @param string $automation_id ID automatizace
+     * @param string $automation_id Automation ID
      * @param array $data Data
      * @return array|stdClass|string
      */
@@ -390,6 +427,26 @@ class Ecomail
     }
 
 
+    /**
+     * Get automation stats for multiple emails
+     * @param string $pipelineId ID of the automation pipeline
+     * @param array $data Data containing emails array
+     * @param array $queryParams Optional query parameters
+     * @return array|stdClass|string
+     */
+    public function getPipelineStatsForMultipleEmails($pipelineId, array $data, $queryParams = array())
+    {
+        $url = $this->joinString('pipelines/', $pipelineId, '/stats-detail');
+        
+        $query = array();
+        if (!empty($queryParams)) {
+            $query = $queryParams;
+        }
+
+        return $this->post($url, $data, $query);
+    }
+
+
     // === Templates ===
 
     /**
@@ -400,6 +457,18 @@ class Ecomail
     {
         $url = $this->joinString('template');
         return $this->post($url, $data);
+    }
+
+
+    /**
+     * Get template by ID
+     * @param string $templateId ID of the template
+     * @return array|stdClass|string
+     */
+    public function getTemplate($templateId)
+    {
+        $url = $this->joinString('template/', $templateId);
+        return $this->get($url);
     }
 
 
@@ -427,7 +496,7 @@ class Ecomail
 
 
     /**
-     * @param int $id ID domény
+     * @param int $id Domain ID
      * @return array|stdClass|string
      */
     public function deleteDomain($id)
@@ -437,7 +506,7 @@ class Ecomail
     }
 
 
-    // ===  Transakční e-maily ===
+    // === Transactional emails ===
 
     /**
      * @param array $data Data
@@ -510,7 +579,7 @@ class Ecomail
 
 
     /**
-     * @param string $transaction_id ID transakce
+     * @param string $transaction_id Transaction ID
      * @param array $data Data
      * @return array|stdClass|string
      */
@@ -522,7 +591,7 @@ class Ecomail
 
 
     /**
-     * @param string $transaction_id ID transakce
+     * @param string $transaction_id Transaction ID
      * @return array
      */
     public function deleteTransaction($transaction_id)
@@ -643,8 +712,44 @@ class Ecomail
     }
 
 
+    // === Webhook ===
+
     /**
-     * Spojování textu
+     * Set webhook URL for the account
+     * @param array $data Data containing the webhook URL
+     * @return array|stdClass|string
+     */
+    public function setWebhook(array $data)
+    {
+        $url = $this->joinString('account/settings/webhook');
+        return $this->post($url, $data);
+    }
+
+
+    /**
+     * Get webhook URL for the account
+     * @return array|stdClass|string
+     */
+    public function getWebhook()
+    {
+        $url = $this->joinString('account/settings/webhook');
+        return $this->get($url);
+    }
+
+
+    /**
+     * Delete webhook URL for the account
+     * @return array|stdClass|string
+     */
+    public function deleteWebhook()
+    {
+        $url = $this->joinString('account/settings/webhook');
+        return $this->delete($url);
+    }
+
+
+    /**
+     * String concatenation
      *
      * @return string
      */
@@ -661,10 +766,10 @@ class Ecomail
     // === cURL ===
 
     /**
-     * Pomocná metoda pro GET
+     * Helper method for GET
      *
-     * @param string $request Požadavek
-     * @param array $query Query data dotazu
+     * @param string $request Request
+     * @param array $query Query data
      * @return array|stdClass|string
      */
     private function get($request, array $query = array())
@@ -674,11 +779,11 @@ class Ecomail
 
 
     /**
-     * Pomocná metoda pro POST
+     * Helper method for POST
      *
-     * @param string $request Požadavek
-     * @param array $data Zaslaná data
-     * @param array $query Query data dotazu
+     * @param string $request Request
+     * @param array $data Sent data
+     * @param array $query Query data
      * @return array|stdClass|string
      */
     private function post($request, array $data, array $query = array())
@@ -688,11 +793,11 @@ class Ecomail
 
 
     /**
-     * Pomocná metoda pro PUT
+     * Helper method for PUT
      *
-     * @param string $request Požadavek
-     * @param array $data Zaslaná data
-     * @param array $query Query data dotazu
+     * @param string $request Request
+     * @param array $data Sent data
+     * @param array $query Query data
      * @return array|stdClass|string
      */
     private function put($request, array $data = array(), array $query = array())
@@ -702,11 +807,11 @@ class Ecomail
 
 
     /**
-     * Pomocná metoda pro DELETE
+     * Helper method for DELETE
      *
-     * @param string $request Požadavek
+     * @param string $request Request
      * @param array $data
-     * @param array $query Query data dotazu
+     * @param array $query Query data
      * @return array|stdClass|string
      */
     private function delete($request, array $data = array(), array $query = array())
@@ -715,12 +820,12 @@ class Ecomail
     }
 
     /**
-     * Odeslání požadavku
+     * Send request
      *
-     * @param string $request Požadavek
-     * @param null|array $data Zaslaná data
-     * @param null|string $method Metoda (GET, POST, DELETE, PUT)
-     * @param array $query Query data dotazu
+     * @param string $request Request
+     * @param null|array $data Sent data
+     * @param null|string $method Method (GET, POST, DELETE, PUT)
+     * @param array $query Query data
      * @return array|stdClass|string
      */
     private function send($request, $data, $method, array $query)
